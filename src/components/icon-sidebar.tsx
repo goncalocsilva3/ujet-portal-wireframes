@@ -40,13 +40,12 @@ const bottomItems: IconSidebarItem[] = [
 function SidebarButton({ item }: { item: IconSidebarItem }) {
   return (
     <Tooltip>
-      <TooltipTrigger asChild>
-        <button
-          className={cn(
-            "flex w-14 flex-col items-center justify-center gap-1 rounded-lg py-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white/80",
-            item.active && "bg-white/15 text-white"
-          )}
-        >
+      <TooltipTrigger
+        className={cn(
+          "flex w-14 flex-col items-center justify-center gap-1 rounded-lg py-2 text-white/60 transition-colors hover:bg-white/10 hover:text-white/80",
+          item.active && "bg-white/15 text-white"
+        )}
+      >
           <div className="relative">
             {item.icon}
             {item.badge && (
@@ -56,7 +55,6 @@ function SidebarButton({ item }: { item: IconSidebarItem }) {
             )}
           </div>
           <span className="text-[10px] tracking-wide">{item.label}</span>
-        </button>
       </TooltipTrigger>
       <TooltipContent side="right">
         <p>{item.label}</p>
