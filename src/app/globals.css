@@ -128,4 +128,8 @@
   html {
     @apply font-sans;
   }
+  input[type="radio"],
+  input[type="checkbox"] {
+    accent-color: #030712;
+  }
 }
