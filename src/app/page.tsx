@@ -31,6 +31,8 @@ import {
 } from "@/components/pages/languages-and-messages";
 import { ToolsPage } from "@/components/pages/tools";
 import { WrapUpPage } from "@/components/pages/wrap-up";
+import { ChatGeneralSettingsTab, ChatWebAndMobileTab, ChatSmsTab } from "@/components/pages/chat";
+import { SocialWhatsappTab, SocialAmbTab } from "@/components/pages/social";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -216,6 +218,12 @@ const pageConfigs: Record<string, PageConfig> = {
     title: "Chat",
     description: "Configure chat channel settings and features",
     layout: "centered",
+    tabs: [
+      { label: "General Settings", value: "general" },
+      { label: "Web and Mobile", value: "web-mobile" },
+      { label: "SMS", value: "sms" },
+    ],
+    defaultTab: "general",
   },
   "/settings/email": {
     title: "Email",
@@ -226,6 +234,11 @@ const pageConfigs: Record<string, PageConfig> = {
     title: "Social",
     description: "Configure social media channel integrations",
     layout: "centered",
+    tabs: [
+      { label: "Whatsapp", value: "whatsapp" },
+      { label: "AMB", value: "amb" },
+    ],
+    defaultTab: "whatsapp",
   },
   "/settings/blended-sms": {
     title: "Blended SMS",
@@ -318,8 +331,15 @@ function PageContent({
     case "/settings/availability-preferences":
     case "/settings/agent-status":
     case "/settings/chat":
-    case "/settings/email":
+      if (activeTab === "web-mobile") return <ChatWebAndMobileTab />;
+      if (activeTab === "sms") return <ChatSmsTab />;
+      return <ChatGeneralSettingsTab />;
+
     case "/settings/social":
+      if (activeTab === "amb") return <SocialAmbTab />;
+      return <SocialWhatsappTab />;
+
+    case "/settings/email":
     case "/settings/blended-sms":
     case "/settings/queues":
     case "/settings/queue-groups":

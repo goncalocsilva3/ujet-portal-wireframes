@@ -1,6 +1,7 @@
 "use client";
 
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { useState } from "react";
+import { Upload, Image as ImageIcon, ChevronDown } from "lucide-react";
 import { SettingsSection } from "@/components/settings-section";
 import { SettingsField } from "@/components/settings-field";
 
@@ -21,16 +22,97 @@ function UnitInput({ suffix, width = "w-[130px]", defaultValue }: { suffix?: str
   );
 }
 
+function MetricsFilterDropdown({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative" onClick={(e) => e.stopPropagation()}>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="flex h-9 items-center gap-2 rounded-md border border-[#e5e7eb] bg-white px-4 text-sm font-medium text-[#030712] shadow-sm transition-colors hover:bg-[#fafafa]"
+      >
+        {value}
+        <ChevronDown className={`size-3 text-[#6b7280] transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 w-32 rounded-md border border-[#e5e7eb] bg-white py-1 shadow-lg">
+          {["Calls", "Chats"].map((opt) => (
+            <button
+              key={opt}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onChange(opt); setOpen(false); }}
+              className={`flex w-full items-center px-4 py-2 text-sm transition-colors hover:bg-[#f3f4f6] ${value === opt ? "font-medium text-[#030712]" : "text-[#6b7280]"}`}
+            >
+              {opt}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TargetMetricsSection() {
+  const [channel, setChannel] = useState("Calls");
+
+  return (
+    <SettingsSection
+      title="Target Metrics"
+      collapsible={false}
+      headerRight={<MetricsFilterDropdown value={channel} onChange={setChannel} />}
+    >
+      {channel === "Calls" ? (
+        <div>
+          <SettingsField label="Target Session CSAT">
+            <UnitInput suffix="Stars" />
+          </SettingsField>
+          <SettingsField label="Repeat Contact Time Period">
+            <UnitInput suffix="Hours" />
+          </SettingsField>
+          <SettingsField label="Service Level Target">
+            <div className="flex items-center gap-2">
+              <UnitInput suffix="%" width="w-[100px]" />
+              <span className="text-xs text-[#6b7280]">in</span>
+              <UnitInput suffix="Seconds" />
+            </div>
+          </SettingsField>
+          <SettingsField label="Target Pick Up Time">
+            <UnitInput suffix="Seconds" />
+          </SettingsField>
+        </div>
+      ) : (
+        <div>
+          <SettingsField label="Target Session CSAT">
+            <UnitInput suffix="Stars" />
+          </SettingsField>
+          <SettingsField label="Repeat Contact Time Period">
+            <UnitInput suffix="Hours" />
+          </SettingsField>
+          <SettingsField label="Service Level Target">
+            <div className="flex items-center gap-2">
+              <UnitInput suffix="%" width="w-[100px]" />
+              <span className="text-xs text-[#6b7280]">in</span>
+              <UnitInput suffix="Seconds" />
+            </div>
+          </SettingsField>
+          <SettingsField label="Concurrency Target">
+            <UnitInput />
+          </SettingsField>
+          <SettingsField label="Target Pick Up Time">
+            <UnitInput suffix="Seconds" />
+          </SettingsField>
+        </div>
+      )}
+    </SettingsSection>
+  );
+}
+
 export function ContactCenterDetailsPage() {
   return (
     <div className="flex flex-col gap-6 pb-6">
       {/* Section 1: Support Center Details */}
       <SettingsSection title="Support Center Details" collapsible={false}>
         {/* Sub-heading: General Support Center Details */}
-        <h4 className="text-sm font-medium text-[#030712] mb-4">
-          General Support Center Details
-        </h4>
-
         {/* Support Center Name */}
         <div className="flex flex-col gap-1.5 mb-4">
           <label className="text-sm font-medium text-[#030712]">
@@ -111,54 +193,7 @@ export function ContactCenterDetailsPage() {
       </SettingsSection>
 
       {/* Section 2: Target Metrics */}
-      <SettingsSection title="Target Metrics" collapsible={false}>
-        {/* Call metrics */}
-        <h4 className="text-sm font-medium text-[#030712] mb-1">Call</h4>
-        <div>
-          <SettingsField label="Target Session CSAT">
-            <UnitInput suffix="Stars" />
-          </SettingsField>
-          <SettingsField label="Repeat Contact Time Period">
-            <UnitInput suffix="Hours" />
-          </SettingsField>
-          <SettingsField label="Service Level Target">
-            <div className="flex items-center gap-2">
-              <UnitInput suffix="%" width="w-[100px]" />
-              <span className="text-xs text-[#6b7280]">in</span>
-              <UnitInput suffix="Seconds" />
-            </div>
-          </SettingsField>
-          <SettingsField label="Target Pick Up Time">
-            <UnitInput suffix="Seconds" />
-          </SettingsField>
-        </div>
-
-        <div className="border-t border-[#e5e7eb] my-5" />
-
-        {/* Chat metrics */}
-        <h4 className="text-sm font-medium text-[#030712] mb-1">Chat</h4>
-        <div>
-          <SettingsField label="Target Session CSAT">
-            <UnitInput suffix="Stars" />
-          </SettingsField>
-          <SettingsField label="Repeat Contact Time Period">
-            <UnitInput suffix="Hours" />
-          </SettingsField>
-          <SettingsField label="Service Level Target">
-            <div className="flex items-center gap-2">
-              <UnitInput suffix="%" width="w-[100px]" />
-              <span className="text-xs text-[#6b7280]">in</span>
-              <UnitInput suffix="Seconds" />
-            </div>
-          </SettingsField>
-          <SettingsField label="Concurrency Target">
-            <UnitInput />
-          </SettingsField>
-          <SettingsField label="Target Pick Up Time">
-            <UnitInput suffix="Seconds" />
-          </SettingsField>
-        </div>
-      </SettingsSection>
+      <TargetMetricsSection />
     </div>
   );
 }
