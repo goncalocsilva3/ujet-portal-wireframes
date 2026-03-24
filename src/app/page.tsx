@@ -30,7 +30,8 @@ import {
   MessagesTab,
 } from "@/components/pages/languages-and-messages";
 import { ToolsPage } from "@/components/pages/tools";
-import { WrapUpPage } from "@/components/pages/wrap-up";
+import { QueuesPage } from "@/components/pages/queues";
+import { WrapUpPage } from "@/components/pages/wrap-up-2";
 import { ChatGeneralSettingsTab, ChatWebAndMobileTab, ChatSmsTab } from "@/components/pages/chat";
 import { SocialWhatsappTab, SocialAmbTab } from "@/components/pages/social";
 
@@ -319,6 +320,7 @@ function PageContent({
     case "/settings/wrap-up":
       return <WrapUpPage />;
 
+
     case "/settings/customer-satisfaction-ratings":
     case "/settings/forms":
     case "/settings/surveys":
@@ -339,9 +341,11 @@ function PageContent({
       if (activeTab === "amb") return <SocialAmbTab />;
       return <SocialWhatsappTab />;
 
+    case "/settings/queues":
+      return <QueuesPage />;
+
     case "/settings/email":
     case "/settings/blended-sms":
-    case "/settings/queues":
     case "/settings/queue-groups":
     case "/settings/wfm-general-settings":
     case "/settings/wfm-bulk-import":

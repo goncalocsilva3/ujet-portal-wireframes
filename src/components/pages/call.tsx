@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import { SettingsToggle } from "@/components/settings-toggle";
 import { SettingsNavList, type NavListItem } from "@/components/settings-nav-list";
+import { AlertDialog } from "@/components/alert-dialog";
 
 export function CallPage() {
   const [callsEnabled, setCallsEnabled] = useState(true);
+  const [showDisableDialog, setShowDisableDialog] = useState(false);
   const [emergencyEnabled, setEmergencyEnabled] = useState(false);
   const [smsDeflectionEnabled, setSmsDeflectionEnabled] = useState(false);
 
@@ -120,12 +122,35 @@ export function CallPage() {
               Enable or disable call functionality for your support center.
             </span>
           </div>
-          <SettingsToggle enabled={callsEnabled} onChange={setCallsEnabled} />
+          <SettingsToggle
+            enabled={callsEnabled}
+            onChange={(v) => {
+              if (!v) {
+                setShowDisableDialog(true);
+              } else {
+                setCallsEnabled(true);
+              }
+            }}
+          />
         </div>
       </div>
 
       {/* Navigation list card */}
       <SettingsNavList items={items} />
+
+      {/* Disable confirmation dialog */}
+      <AlertDialog
+        open={showDisableDialog}
+        onClose={() => setShowDisableDialog(false)}
+        onConfirm={() => {
+          setCallsEnabled(false);
+          setShowDisableDialog(false);
+        }}
+        title="Disable Calls"
+        description="Are you sure you want to disable call functionality? This will prevent all call channels from operating in your support center."
+        confirmLabel="Disable"
+        destructive={false}
+      />
     </div>
   );
 }

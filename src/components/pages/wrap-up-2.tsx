@@ -57,7 +57,7 @@ function ToggleSection({
             <h3 className="text-sm font-semibold text-[#030712]">{title}</h3>
             {tooltip && (
               <div className="group relative">
-                <Info className="size-3.5 text-[#9ca3af] cursor-help" />
+                <Info className="size-3.5 text-[#9ca3af] cursor-default" />
                 <div className="pointer-events-none absolute left-1/2 top-full z-50 mt-1.5 -translate-x-1/2 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                   <div className="w-[280px] rounded-lg bg-[#030712] px-3 py-2 text-xs text-white shadow-lg">
                     {tooltip}
@@ -316,58 +316,66 @@ const dispositionCodeLists = [
 
 // ─── Tab Component ───────────────────────────────────────
 
+type WrapUpTab = "inbound" | "outbound" | "chats";
+
 function WrapUpTabs({
   activeTab,
   onTabChange,
 }: {
-  activeTab: "calls" | "chats";
-  onTabChange: (tab: "calls" | "chats") => void;
+  activeTab: WrapUpTab;
+  onTabChange: (tab: WrapUpTab) => void;
 }) {
+  const tabs: { id: WrapUpTab; label: string }[] = [
+    { id: "inbound", label: "Inbound Calls" },
+    { id: "outbound", label: "Outbound Calls" },
+    { id: "chats", label: "Chats" },
+  ];
+
   return (
     <div className="flex gap-1 border-b border-[#e5e7eb]">
-      <button
-        type="button"
-        onClick={() => onTabChange("calls")}
-        className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-          activeTab === "calls"
-            ? "border-[#030712] text-[#030712]"
-            : "border-transparent text-[#6b7280] hover:text-[#030712]"
-        }`}
-      >
-        Calls
-      </button>
-      <button
-        type="button"
-        onClick={() => onTabChange("chats")}
-        className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
-          activeTab === "chats"
-            ? "border-[#030712] text-[#030712]"
-            : "border-transparent text-[#6b7280] hover:text-[#030712]"
-        }`}
-      >
-        Chats
-      </button>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          type="button"
+          onClick={() => onTabChange(tab.id)}
+          className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+            activeTab === tab.id
+              ? "border-[#030712] text-[#030712]"
+              : "border-transparent text-[#6b7280] hover:text-[#030712]"
+          }`}
+        >
+          {tab.label}
+        </button>
+      ))}
     </div>
   );
 }
 
-// ─── Calls Tab Content ───────────────────────────────────
+// ─── Call Direction Content (shared for inbound/outbound) ─
 
-function CallsTabContent() {
-  const [autoInbound, setAutoInbound] = useState(false);
-  const [autoOutbound, setAutoOutbound] = useState(false);
+function CallDirectionContent({
+  direction,
+  defaultSeconds,
+  defaultDispositionEnabled,
+  defaultDispositionOption,
+  autoEnabled,
+  onAutoToggle,
+}: {
+  direction: "Inbound" | "Outbound";
+  defaultSeconds: number;
+  defaultDispositionEnabled: boolean;
+  defaultDispositionOption: "Optional" | "Mandatory";
+  autoEnabled: boolean;
+  onAutoToggle: (v: boolean) => void;
+}) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* ─── Inbound Calls subtitle ─── */}
-      <h2 className="text-base font-semibold text-[#030712] -mb-2">Inbound Calls</h2>
-
-      {/* Automatic wrap-up for inbound calls + Disposition inside */}
       <ToggleSection
-        title="Automatic Wrap-up for Inbound Calls"
-        description="Automatically start wrap-up after inbound calls end."
-        enabled={autoInbound}
-        onToggle={setAutoInbound}
+        title={`Automatic Wrap-up for ${direction} Calls`}
+        description={`Automatically start wrap-up after ${direction.toLowerCase()} calls end.`}
+        enabled={autoEnabled}
+        onToggle={onAutoToggle}
       >
         <div className="flex flex-col">
           <SettingsField
@@ -375,12 +383,13 @@ function CallsTabContent() {
             description="Switch status to Available after this duration"
             noBorder
           >
-            <UnitInput suffix="Seconds" defaultValue={60} />
+            <UnitInput suffix="Seconds" defaultValue={defaultSeconds} />
           </SettingsField>
 
-          {/* Disposition Codes & Notes for Calls — inside inbound section */}
           <div className="border-t border-[#e5e7eb] pt-4 mt-2">
-            <h4 className="text-sm font-semibold text-[#030712] mb-3">Disposition Codes & Notes for Calls</h4>
+            <h4 className="text-sm font-semibold text-[#030712] mb-3">
+              Disposition Codes &amp; Notes for {direction} Calls
+            </h4>
 
             <SettingsField label="Default Disposition Code List">
               <div className="w-[220px]">
@@ -394,69 +403,8 @@ function CallsTabContent() {
 
             <ToggleWithRadio
               label="Disposition Codes"
-              defaultEnabled={true}
-              defaultOption="Mandatory"
-            />
-
-            <ToggleWithRadio
-              label="Notes"
-              defaultEnabled={false}
-              defaultOption="Optional"
-            />
-
-            <div className="mt-3 flex min-h-[36px] items-center justify-between gap-8">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-[#030712]">Manage Disposition Codes</span>
-                <span className="text-xs text-[#6b7280]">Create, edit, and organize your disposition code lists</span>
-              </div>
-              <button
-                type="button"
-                className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#030712] shadow-sm transition-colors hover:bg-[#f3f4f6]"
-              >
-                Disposition Codes
-                <ChevronRight className="size-3.5 text-[#6b7280]" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </ToggleSection>
-
-      {/* ─── Outbound Calls subtitle ─── */}
-      <h2 className="text-base font-semibold text-[#030712] -mb-2">Outbound Calls</h2>
-
-      {/* Automatic wrap-up for outbound calls + Disposition inside */}
-      <ToggleSection
-        title="Automatic Wrap-up for Outbound Calls"
-        description="Automatically start wrap-up after outbound calls end."
-        enabled={autoOutbound}
-        onToggle={setAutoOutbound}
-      >
-        <div className="flex flex-col">
-          <SettingsField
-            label="Available Status"
-            description="Switch status to Available after this duration"
-            noBorder
-          >
-            <UnitInput suffix="Seconds" defaultValue={45} />
-          </SettingsField>
-
-          <div className="border-t border-[#e5e7eb] pt-4 mt-2">
-            <h4 className="text-sm font-semibold text-[#030712] mb-3">Disposition Codes & Notes for Outbound Calls</h4>
-
-            <SettingsField label="Default Disposition Code List">
-              <div className="w-[220px]">
-                <SearchableDropdown
-                  options={dispositionCodeLists}
-                  defaultValue="List 01"
-                  placeholder="Search disposition codes..."
-                />
-              </div>
-            </SettingsField>
-
-            <ToggleWithRadio
-              label="Disposition Codes"
-              defaultEnabled={false}
-              defaultOption="Optional"
+              defaultEnabled={defaultDispositionEnabled}
+              defaultOption={defaultDispositionOption}
             />
 
             <ToggleWithRadio
@@ -487,8 +435,13 @@ function CallsTabContent() {
 
 // ─── Chats Tab Content ───────────────────────────────────
 
-function ChatsTabContent() {
-  const [autoChats, setAutoChats] = useState(false);
+function ChatsTabContent({
+  autoChats,
+  onAutoToggle,
+}: {
+  autoChats: boolean;
+  onAutoToggle: (v: boolean) => void;
+}) {
 
   return (
     <div className="flex flex-col gap-6">
@@ -497,7 +450,7 @@ function ChatsTabContent() {
         title="Automatic Wrap-up for Chats"
         description="Automatically start wrap-up after chat sessions end."
         enabled={autoChats}
-        onToggle={setAutoChats}
+        onToggle={onAutoToggle}
       >
         <div className="flex flex-col">
           <SettingsField
@@ -568,7 +521,10 @@ function ChatsTabContent() {
 
 export function WrapUpPage() {
   const [wrapUpExceeded, setWrapUpExceeded] = useState(false);
-  const [activeTab, setActiveTab] = useState<"calls" | "chats">("calls");
+  const [activeTab, setActiveTab] = useState<WrapUpTab>("inbound");
+  const [autoInbound, setAutoInbound] = useState(false);
+  const [autoOutbound, setAutoOutbound] = useState(false);
+  const [autoChats, setAutoChats] = useState(false);
 
   return (
     <div className="flex flex-col gap-6 pb-6">
@@ -581,11 +537,33 @@ export function WrapUpPage() {
         onToggle={setWrapUpExceeded}
       />
 
-      {/* Tabs: Calls / Chats */}
+      {/* Tabs: Inbound Calls / Outbound Calls / Chats */}
       <WrapUpTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
       {/* Tab content */}
-      {activeTab === "calls" ? <CallsTabContent /> : <ChatsTabContent />}
+      {activeTab === "inbound" && (
+        <CallDirectionContent
+          direction="Inbound"
+          defaultSeconds={60}
+          defaultDispositionEnabled={true}
+          defaultDispositionOption="Mandatory"
+          autoEnabled={autoInbound}
+          onAutoToggle={setAutoInbound}
+        />
+      )}
+      {activeTab === "outbound" && (
+        <CallDirectionContent
+          direction="Outbound"
+          defaultSeconds={45}
+          defaultDispositionEnabled={false}
+          defaultDispositionOption="Optional"
+          autoEnabled={autoOutbound}
+          onAutoToggle={setAutoOutbound}
+        />
+      )}
+      {activeTab === "chats" && (
+        <ChatsTabContent autoChats={autoChats} onAutoToggle={setAutoChats} />
+      )}
     </div>
   );
 }
