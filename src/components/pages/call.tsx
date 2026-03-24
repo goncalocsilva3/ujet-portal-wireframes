@@ -141,7 +141,7 @@ export function CallPage() {
       {/* Disable confirmation dialog */}
       <AlertDialog
         open={showDisableDialog}
-        onClose={() => setShowDisableDialog(false)}
+        onCancel={() => setShowDisableDialog(false)}
         onConfirm={() => {
           setCallsEnabled(false);
           setShowDisableDialog(false);
@@ -149,7 +149,7 @@ export function CallPage() {
         title="Disable Calls"
         description="Are you sure you want to disable call functionality? This will prevent all call channels from operating in your support center."
         confirmLabel="Disable"
-        destructive={false}
+        confirmVariant="primary"
       />
     </div>
   );
