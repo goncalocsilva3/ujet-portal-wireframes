@@ -150,12 +150,15 @@ export function ApiCredentialsPage() {
               <Code className="size-5 text-[#6b7280]" />
             </div>
 
-            {/* Name + badge */}
-            <div className="flex flex-1 items-center gap-2">
+            {/* Name + status below */}
+            <div className="flex flex-1 flex-col">
               <span className="text-sm font-medium text-[#030712]">{item.name}</span>
-              <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-normal leading-none ${statusStyles[item.status]}`}>
-                {item.status}
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className={`inline-block size-2 rounded-full ${item.status === "Active" ? "bg-[#15803d]" : "bg-[#9ca3af]"}`} />
+                <span className={`text-sm ${item.status === "Active" ? "text-[#15803d]" : "text-[#9ca3af]"}`}>
+                  {item.status === "Active" ? "Active" : "Inactive"}
+                </span>
+              </div>
             </div>
 
             {/* Actions: toggle | divider | Edit + Generate */}

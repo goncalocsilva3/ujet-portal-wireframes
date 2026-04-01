@@ -255,35 +255,21 @@ export function ToolsPage() {
                 {item.icon}
               </div>
 
-              {/* Name + category + description */}
+              {/* Name + category + description + status */}
               <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-[#030712]">{item.name}</span>
+                  <span className="text-[16px] font-medium text-[#030712] leading-tight">{item.name}</span>
                   <span className="inline-flex items-center rounded border border-[#e5e7eb] bg-[#f3f4f6] px-2 py-0.5 text-[10px] font-medium leading-none text-[#6b7280]">
                     {item.category}
                   </span>
                 </div>
-                <span className="truncate text-xs text-[#6b7280]">{item.description}</span>
-              </div>
-
-              {/* Status badge */}
-              <div className="shrink-0">
-                <span
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-medium leading-none ${statusStyles[item.status]}`}
-                >
-                  {item.status === "Active" && (
-                    <svg className="size-3" viewBox="0 0 12 12" fill="none">
-                      <path
-                        d="M10 3L4.5 8.5L2 6"
-                        stroke="currentColor"
-                        strokeWidth="1.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  )}
-                  {item.provider ? `${item.provider} - ${item.status}` : item.status}
-                </span>
+                <span className="truncate text-[12px] text-[#6b7280] leading-tight">{item.description}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-block size-1.5 rounded-full ${item.status === "Active" ? "bg-[#15803d]" : "bg-[#9ca3af]"}`} />
+                  <span className={`text-[12px] leading-tight ${item.status === "Active" ? "text-[#15803d]" : "text-[#9ca3af]"}`}>
+                    {item.provider ? `${item.provider} - ${item.status}` : item.status}
+                  </span>
+                </div>
               </div>
 
               {/* Chevron button */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { IconSidebar } from "@/components/icon-sidebar";
 import { NavSidebar, navGroups } from "@/components/nav-sidebar";
 import { TopBar } from "@/components/top-bar";
@@ -274,14 +274,18 @@ function PageContent({
   activePage,
   activeTab,
   onNavigate,
+  unsavedGuardRef,
+  sidebarCollapsed,
 }: {
   activePage: string;
   activeTab: string;
   onNavigate: (href: string, label: string, parentLabel?: string) => void;
+  unsavedGuardRef?: React.MutableRefObject<((href: string, label: string) => boolean) | null>;
+  sidebarCollapsed?: boolean;
 }) {
   switch (activePage) {
     case "/settings/contact-center-details":
-      return <ContactCenterDetailsPage />;
+      return <ContactCenterDetailsPage onNavigateAttempt={(cb) => { if (unsavedGuardRef) unsavedGuardRef.current = cb; }} sidebarCollapsed={sidebarCollapsed} />;
 
     case "/settings/hours-of-operation":
       return activeTab === "holidays" ? <HolidaysTab /> : <HoursOfOperationTab />;
@@ -370,6 +374,20 @@ export default function Home() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState("");
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const unsavedGuardRef = useRef<((href: string, label: string) => boolean) | null>(null);
+
+  // Listen for force-navigate events from unsaved changes dialog
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.href && detail?.label) {
+        unsavedGuardRef.current = null;
+        handleNavigateInternal(detail.href, detail.label);
+      }
+    };
+    window.addEventListener("force-navigate", handler);
+    return () => window.removeEventListener("force-navigate", handler);
+  }, []);
 
   // Derive everything from config
   const config = pageConfigs[activePage];
@@ -385,7 +403,7 @@ export default function Home() {
       : config.layout
     : "centered";
 
-  const handleNavigate = useCallback(
+  const handleNavigateInternal = useCallback(
     (href: string, label: string) => {
       if (href === "/settings/overview") {
         setActivePage("overview");
@@ -426,6 +444,18 @@ export default function Home() {
       }
     },
     []
+  );
+
+  const handleNavigate = useCallback(
+    (href: string, label: string) => {
+      if (unsavedGuardRef.current) {
+        const allowed = unsavedGuardRef.current(href, label);
+        if (!allowed) return;
+      }
+      unsavedGuardRef.current = null;
+      handleNavigateInternal(href, label);
+    },
+    [handleNavigateInternal]
   );
 
   const handleBreadcrumbClick = useCallback(
@@ -489,10 +519,10 @@ export default function Home() {
           <div className="flex-1 overflow-auto">
             {layout === "centered" ? (
               <PageLayout layout="centered">
-                <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} />
+                <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} sidebarCollapsed={sidebarCollapsed} />
               </PageLayout>
             ) : (
-              <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} />
+              <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} sidebarCollapsed={sidebarCollapsed} />
             )}
           </div>
         </div>

@@ -119,7 +119,7 @@ export function CallPage() {
           <div className="flex flex-col gap-0.5">
             <span className="text-sm font-medium text-[#030712]">Enable Calls</span>
             <span className="text-xs text-[#6b7280]">
-              Enable or disable call functionality for your support center.
+              Enable or disable call functionality for your contact center.
             </span>
           </div>
           <SettingsToggle
@@ -147,7 +147,7 @@ export function CallPage() {
           setShowDisableDialog(false);
         }}
         title="Disable Calls"
-        description="Are you sure you want to disable call functionality? This will prevent all call channels from operating in your support center."
+        description="Are you sure you want to disable call functionality? This will prevent all call channels from operating in your contact center."
         confirmLabel="Disable"
         confirmVariant="primary"
       />
