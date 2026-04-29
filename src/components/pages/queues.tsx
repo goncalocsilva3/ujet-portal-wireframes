@@ -91,24 +91,21 @@ export function QueuesPage() {
                 {card.icon}
               </div>
 
-              {/* Title + status tag */}
-              <div className="flex flex-1 items-center gap-2">
+              {/* Title */}
+              <div className="flex flex-1 flex-col">
                 <span className="text-sm font-medium text-[#030712]">
                   {card.title}
                 </span>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${
-                    isOn
-                      ? "border border-[#b9f8cf] bg-[#f0fdf4] text-[#008236]"
-                      : "border border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]"
-                  }`}
-                >
-                  {isOn ? "Active" : "Inactive"}
-                </span>
               </div>
 
-              {/* Toggle */}
+              {/* Status + Toggle */}
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className={`inline-block size-2 rounded-full ${isOn ? "bg-[#15803d]" : "bg-[#9ca3af]"}`} />
+                  <span className={`text-sm ${isOn ? "text-[#15803d]" : "text-[#9ca3af]"}`}>
+                    {isOn ? "Active" : "Inactive"}
+                  </span>
+                </div>
                 <button
                   type="button"
                   role="switch"

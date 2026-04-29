@@ -23,8 +23,21 @@ import { SystemSettingsPage } from "@/components/pages/system-settings";
 import { ApiCredentialsPage } from "@/components/pages/api-credentials";
 import { ChannelOperationsPage } from "@/components/pages/channel-operations";
 import { CallPage } from "@/components/pages/call";
+import { ContactListSettingsTab, ContactListManagementTab } from "@/components/pages/contact-lists";
+import { CallDetailsPage } from "@/components/pages/call-details";
+import { ScheduledCallsPage } from "@/components/pages/scheduled-calls";
+import { AgentExtensionsPage } from "@/components/pages/agent-extensions";
+import { DirectInboundPage } from "@/components/pages/direct-inbound";
+import { AgentQueuePage } from "@/components/pages/agent-queue";
+import { PostSessionTransfersPage } from "@/components/pages/post-session-transfers";
+import { AgentCallMessagesPage } from "@/components/pages/agent-call-messages";
+import { VoicemailPage } from "@/components/pages/voicemail";
+import { CallbackSettingsPage } from "@/components/pages/callback-settings";
+
+const SHOW_WIP_PAGES = process.env.NEXT_PUBLIC_SHOW_WIP_PAGES === "1";
 import { OverviewPage } from "@/components/pages/overview";
 import { GlobalSearch } from "@/components/global-search";
+import { Toast } from "@/components/toast";
 import {
   LanguagesTab,
   MessagesTab,
@@ -50,6 +63,20 @@ interface Breadcrumb {
 const pageParents: Record<string, { href: string; label: string; defaultTab?: string }> = {
   "/settings/api-credentials": { href: "/settings/system-settings", label: "System Settings" },
   "/settings/wrap-up": { href: "/settings/channel-operations", label: "Channel Operations" },
+  "/settings/contact-lists": { href: "/settings/call", label: "Call" },
+  "/settings/call-details": { href: "/settings/call", label: "Call" },
+  "/settings/scheduled-calls": { href: "/settings/call", label: "Call" },
+  "/settings/agent-extensions": { href: "/settings/call", label: "Call" },
+  "/settings/direct-inbound": { href: "/settings/call", label: "Call" },
+  ...(SHOW_WIP_PAGES
+    ? {
+        "/settings/agent-queue": { href: "/settings/call", label: "Call" },
+        "/settings/post-session-transfers": { href: "/settings/call", label: "Call" },
+        "/settings/agent-call-messages": { href: "/settings/call", label: "Call" },
+        "/settings/voicemail": { href: "/settings/call", label: "Call" },
+        "/settings/callback-settings": { href: "/settings/call", label: "Call" },
+      }
+    : {}),
 };
 
 /** Walk navGroups to find the organizer label (parent expander item) for a given href */
@@ -134,6 +161,66 @@ const pageConfigs: Record<string, PageConfig> = {
     description: "Configure call channel settings and features",
     layout: "centered",
   },
+  "/settings/contact-lists": {
+    title: "Contact Lists",
+    description: "Manage contact lists and configure agent page access permissions",
+    layout: "centered",
+    tabs: [
+      { label: "Contact List Settings", value: "settings" },
+      { label: "Contact List Management", value: "management" },
+    ],
+    defaultTab: "settings",
+    tabLayouts: { settings: "centered", management: "full-width" },
+  },
+  "/settings/call-details": {
+    title: "Call Details",
+    description: "Manage call detail recording and information display",
+    layout: "centered",
+  },
+  "/settings/scheduled-calls": {
+    title: "Scheduled Calls",
+    description: "Configure scheduled call settings and advance booking options",
+    layout: "centered",
+  },
+  "/settings/agent-extensions": {
+    title: "Agent Extensions",
+    description: "Configure agent extension numbers and direct dial settings",
+    layout: "centered",
+  },
+  "/settings/direct-inbound": {
+    title: "Direct Inbound",
+    description: "Set up direct inbound call routing and handling rules",
+    layout: "centered",
+  },
+  ...(SHOW_WIP_PAGES
+    ? {
+        "/settings/agent-queue": {
+          title: "Agent Queue",
+          description: "Configure agent queue settings, capacity, and behavior.",
+          layout: "centered" as PageLayoutType,
+        },
+        "/settings/post-session-transfers": {
+          title: "Post-session Transfers",
+          description: "Manage call transfer options after a session ends.",
+          layout: "centered" as PageLayoutType,
+        },
+        "/settings/agent-call-messages": {
+          title: "Agent Call Messages & Notifications",
+          description: "Set up agent messaging and notification preferences for calls.",
+          layout: "centered" as PageLayoutType,
+        },
+        "/settings/voicemail": {
+          title: "Voicemail",
+          description: "Configure voicemail settings, greetings, and delivery options.",
+          layout: "centered" as PageLayoutType,
+        },
+        "/settings/callback-settings": {
+          title: "Callback Settings",
+          description: "Configure callback options and queue callback behaviour.",
+          layout: "centered" as PageLayoutType,
+        },
+      }
+    : {}),
   "/settings/languages-and-messages": {
     title: "Languages and Messages",
     description: "Configure languages, localization, and message templates",
@@ -275,12 +362,14 @@ function PageContent({
   activeTab,
   onNavigate,
   unsavedGuardRef,
+  tabSwitchGuardRef,
   sidebarCollapsed,
 }: {
   activePage: string;
   activeTab: string;
   onNavigate: (href: string, label: string, parentLabel?: string) => void;
   unsavedGuardRef?: React.MutableRefObject<((href: string, label: string) => boolean) | null>;
+  tabSwitchGuardRef?: React.MutableRefObject<(() => boolean) | null>;
   sidebarCollapsed?: boolean;
 }) {
   switch (activePage) {
@@ -292,7 +381,7 @@ function PageContent({
 
     case "/settings/phone-numbers":
       return activeTab === "management" ? (
-        <PhoneNumberManagementTab />
+        <PhoneNumberManagementTab sidebarCollapsed={sidebarCollapsed} />
       ) : (
         <PhoneNumbersGeneralTab />
       );
@@ -313,7 +402,117 @@ function PageContent({
       return <ChannelOperationsPage onNavigate={onNavigate} />;
 
     case "/settings/call":
-      return <CallPage />;
+      return <CallPage onNavigate={onNavigate} />;
+
+    case "/settings/contact-lists":
+      return activeTab === "management" ? (
+        <ContactListManagementTab />
+      ) : (
+        <ContactListSettingsTab
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          onTabSwitchAttempt={(cb) => {
+            if (tabSwitchGuardRef) tabSwitchGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/call-details":
+      return (
+        <CallDetailsPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/scheduled-calls":
+      return (
+        <ScheduledCallsPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/agent-extensions":
+      return (
+        <AgentExtensionsPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/direct-inbound":
+      return (
+        <DirectInboundPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/agent-queue":
+      if (!SHOW_WIP_PAGES) return <OverviewPage onNavigate={onNavigate} />;
+      return (
+        <AgentQueuePage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/post-session-transfers":
+      if (!SHOW_WIP_PAGES) return <OverviewPage onNavigate={onNavigate} />;
+      return (
+        <PostSessionTransfersPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/agent-call-messages":
+      if (!SHOW_WIP_PAGES) return <OverviewPage onNavigate={onNavigate} />;
+      return (
+        <AgentCallMessagesPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/voicemail":
+      if (!SHOW_WIP_PAGES) return <OverviewPage onNavigate={onNavigate} />;
+      return (
+        <VoicemailPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
+
+    case "/settings/callback-settings":
+      if (!SHOW_WIP_PAGES) return <OverviewPage onNavigate={onNavigate} />;
+      return (
+        <CallbackSettingsPage
+          onNavigateAttempt={(cb) => {
+            if (unsavedGuardRef) unsavedGuardRef.current = cb;
+          }}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      );
 
     case "/settings/languages-and-messages":
       return activeTab === "messages" ? <MessagesTab /> : <LanguagesTab />;
@@ -375,6 +574,15 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("");
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const unsavedGuardRef = useRef<((href: string, label: string) => boolean) | null>(null);
+  // Tab-switch guard: lets the active tab decide what to do when the user
+  // clicks a different tab. Used by ContactListSettingsTab to auto-save.
+  const tabSwitchGuardRef = useRef<(() => boolean) | null>(null);
+  // Page-level toast surface so a tab can confirm a save AFTER it has
+  // unmounted (e.g. auto-save when switching tabs).
+  const [globalToast, setGlobalToast] = useState<{
+    open: boolean;
+    title: string;
+  }>({ open: false, title: "" });
 
   // Listen for force-navigate events from unsaved changes dialog
   useEffect(() => {
@@ -387,6 +595,20 @@ export default function Home() {
     };
     window.addEventListener("force-navigate", handler);
     return () => window.removeEventListener("force-navigate", handler);
+  }, []);
+
+  // Page-level toast: any component can dispatch `show-toast` with
+  // { title } and the toast will render at the page level. Useful for tabs
+  // that want to confirm an action AFTER they've unmounted.
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.title) {
+        setGlobalToast({ open: true, title: detail.title });
+      }
+    };
+    window.addEventListener("show-toast", handler);
+    return () => window.removeEventListener("show-toast", handler);
   }, []);
 
   // Derive everything from config
@@ -476,6 +698,12 @@ export default function Home() {
   }, []);
 
   const handleTabChange = useCallback((value: string) => {
+    // Give the active tab a chance to react to the switch (e.g. auto-save).
+    if (tabSwitchGuardRef.current) {
+      const allowed = tabSwitchGuardRef.current();
+      tabSwitchGuardRef.current = null;
+      if (!allowed) return;
+    }
     setActiveTab(value);
   }, []);
 
@@ -519,10 +747,10 @@ export default function Home() {
           <div className="flex-1 overflow-auto">
             {layout === "centered" ? (
               <PageLayout layout="centered">
-                <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} sidebarCollapsed={sidebarCollapsed} />
+                <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} tabSwitchGuardRef={tabSwitchGuardRef} sidebarCollapsed={sidebarCollapsed} />
               </PageLayout>
             ) : (
-              <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} sidebarCollapsed={sidebarCollapsed} />
+              <PageContent activePage={activePage} activeTab={activeTab} onNavigate={handleNavigate} unsavedGuardRef={unsavedGuardRef} tabSwitchGuardRef={tabSwitchGuardRef} sidebarCollapsed={sidebarCollapsed} />
             )}
           </div>
         </div>
@@ -533,6 +761,14 @@ export default function Home() {
         open={globalSearchOpen}
         onOpenChange={setGlobalSearchOpen}
         onNavigate={handleNavigate}
+      />
+
+      {/* Page-level toast (used by tabs that need to confirm an action
+          after they've already unmounted, e.g. auto-save on tab switch) */}
+      <Toast
+        open={globalToast.open}
+        title={globalToast.title}
+        onClose={() => setGlobalToast((t) => ({ ...t, open: false }))}
       />
     </div>
   );

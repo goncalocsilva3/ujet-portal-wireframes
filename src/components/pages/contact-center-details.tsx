@@ -209,7 +209,11 @@ export function ContactCenterDetailsPage({ onNavigateAttempt, sidebarCollapsed }
           <input
             type="text"
             value={centerName}
-            onChange={(e) => { setCenterName(e.target.value); handleChange(); }}
+            onChange={(e) => {
+              setCenterName(e.target.value);
+              setTouched((p) => ({ ...p, centerName: true }));
+              handleChange();
+            }}
             onBlur={() => setTouched((p) => ({ ...p, centerName: true }))}
             placeholder="Enter contact center name"
             className={`h-9 w-full rounded-md border px-3 text-sm text-[#030712] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#030712]/20 focus:border-[#030712] ${showError("centerName") ? "border-red-500" : "border-[#e5e7eb]"}`}
@@ -246,7 +250,11 @@ export function ContactCenterDetailsPage({ onNavigateAttempt, sidebarCollapsed }
           <input
             type="text"
             value={email}
-            onChange={(e) => { setEmail(e.target.value); handleChange(); }}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setTouched((p) => ({ ...p, email: true }));
+              handleChange();
+            }}
             onBlur={() => setTouched((p) => ({ ...p, email: true }))}
             placeholder="Enter support email address"
             className={`h-9 w-full rounded-md border px-3 text-sm text-[#030712] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#030712]/20 focus:border-[#030712] ${showError("email") ? "border-red-500" : "border-[#e5e7eb]"}`}
@@ -275,7 +283,11 @@ export function ContactCenterDetailsPage({ onNavigateAttempt, sidebarCollapsed }
                 <input
                   type="number"
                   value={timeout}
-                  onChange={(e) => { setTimeout_(e.target.value); handleChange(); }}
+                  onChange={(e) => {
+                    setTimeout_(e.target.value);
+                    setTouched((p) => ({ ...p, timeout: true }));
+                    handleChange();
+                  }}
                   onBlur={() => setTouched((p) => ({ ...p, timeout: true }))}
                   className="h-full flex-1 min-w-0 bg-transparent px-3 text-sm text-[#030712] outline-none"
                 />

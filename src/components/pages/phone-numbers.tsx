@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Pencil, Trash2, CheckCircle, Info, Plus, ChevronDown } from "lucide-react";
+import { Search, Pencil, Trash2, CheckCircle, Info, Plus, ChevronDown, Loader2 } from "lucide-react";
 import { SettingsSection } from "@/components/settings-section";
 import { SettingsField } from "@/components/settings-field";
 import { SettingsToggle } from "@/components/settings-toggle";
+import { Toast } from "@/components/toast";
 
 export function PhoneNumbersGeneralTab() {
   const [sipOutEnabled, setSipOutEnabled] = useState(false);
@@ -16,7 +17,7 @@ export function PhoneNumbersGeneralTab() {
             type="text"
             defaultValue="+1 415-322-2283"
             disabled
-            className="h-8 w-64 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
+            className="h-8 w-72 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
           />
         </SettingsField>
         <SettingsField label="Total Phone Numbers">
@@ -24,7 +25,7 @@ export function PhoneNumbersGeneralTab() {
             type="text"
             defaultValue="6"
             disabled
-            className="h-8 w-64 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
+            className="h-8 w-72 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
           />
         </SettingsField>
         <SettingsField label="SIP Out Configuration" description={sipOutEnabled ? "Disable SIP Out" : "Enable SIP Out"}>
@@ -33,7 +34,7 @@ export function PhoneNumbersGeneralTab() {
         <SettingsField label="Default Country Code">
           <select
             disabled
-            className="h-8 w-64 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
+            className="h-8 w-72 rounded-md border border-[#e5e7eb] bg-[#f9fafb] px-3 text-sm text-[#6b7280] cursor-not-allowed"
           >
             <option>[US] United States of America (+1)</option>
           </select>
@@ -165,13 +166,37 @@ function QueueCell({ queues, defaultOutbound }: { queues: QueueInfo; defaultOutb
   );
 }
 
-export function PhoneNumberManagementTab() {
+export function PhoneNumberManagementTab({ sidebarCollapsed = false }: { sidebarCollapsed?: boolean } = {}) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [toastOpen, setToastOpen] = useState(false);
+  const [unverifiedCount, setUnverifiedCount] = useState(0);
 
-  const filteredRows = statusFilter === "all"
-    ? phoneNumberRows
-    : phoneNumberRows.filter((r) => r.status === statusFilter);
+  const handleVerifyNumbers = () => {
+    if (verifying) return;
+    setVerifying(true);
+    setTimeout(() => {
+      const count = phoneNumberRows.filter((r) => r.status === "Unverified").length;
+      setUnverifiedCount(count);
+      setVerifying(false);
+      setToastOpen(true);
+    }, 2000);
+  };
+
+  const filteredRows = phoneNumberRows.filter((r) => {
+    const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+    const q = search.toLowerCase();
+    const matchesSearch =
+      !q ||
+      r.number.toLowerCase().includes(q) ||
+      r.label.toLowerCase().includes(q) ||
+      (r.type?.toLowerCase().includes(q) ?? false) ||
+      r.status.toLowerCase().includes(q) ||
+      (r.queues?.items.some((item) => item.toLowerCase().includes(q)) ?? false);
+    return matchesStatus && matchesSearch;
+  });
 
   const allSelected = filteredRows.length > 0 && selectedIds.size === filteredRows.length;
   const someSelected = selectedIds.size > 0 && !allSelected;
@@ -194,6 +219,15 @@ export function PhoneNumberManagementTab() {
   };
 
   return (
+    <>
+    <Toast
+      open={toastOpen}
+      title="Phone Numbers checked successfully."
+      description={unverifiedCount > 0
+        ? `We weren't able to verify ${unverifiedCount} phone number${unverifiedCount > 1 ? "s" : ""}.`
+        : "All phone numbers were verified."}
+      onClose={() => setToastOpen(false)}
+    />
     <div className="flex flex-col gap-4 px-6 py-6">
       {/* Top bar */}
       <div className="flex items-center justify-between">
@@ -202,8 +236,10 @@ export function PhoneNumberManagementTab() {
             <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#6b7280]" />
             <input
               type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search phone numbers, labels, assigned queues..."
-              className="h-9 w-full overflow-hidden text-ellipsis rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#030712] shadow-sm placeholder:overflow-hidden placeholder:text-ellipsis placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#030712]/20 focus:border-[#030712]"
+              className="h-9 w-full overflow-hidden text-ellipsis rounded-lg border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#030712] shadow-sm placeholder:text-ellipsis placeholder:text-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#030712]/20 focus:border-[#030712]"
             />
           </div>
           <div className="relative">
@@ -223,10 +259,16 @@ export function PhoneNumberManagementTab() {
         <div className="flex items-center gap-2">
           <button
             type="button"
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#030712] shadow-sm hover:bg-[#f9fafb] transition-colors"
+            onClick={handleVerifyNumbers}
+            disabled={verifying}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#030712] shadow-sm hover:bg-[#f9fafb] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <CheckCircle className="size-4" />
-            Verify Numbers
+            {verifying ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle className="size-4" />
+            )}
+            {verifying ? "Verifying..." : "Verify Numbers"}
           </button>
           <button
             type="button"
@@ -273,6 +315,19 @@ export function PhoneNumberManagementTab() {
             </tr>
           </thead>
           <tbody>
+            {filteredRows.length === 0 && (
+              <tr>
+                <td colSpan={7} className="rounded-b-lg">
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Search className="mb-2 size-8 text-[#d1d5db]" />
+                    <span className="text-sm font-medium text-[#6b7280]">No phone numbers found</span>
+                    <span className="mt-1 text-xs text-[#9ca3af]">
+                      Try modifying your search or filters
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            )}
             {filteredRows.map((row, idx) => {
               const isLast = idx === filteredRows.length - 1;
               return (
@@ -342,17 +397,26 @@ export function PhoneNumberManagementTab() {
 
       {/* Floating bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 shadow-lg">
+        <div
+          className="fixed bottom-6 -translate-x-1/2 z-50 flex items-center gap-3 rounded-lg border border-[#e5e7eb] bg-white px-4 py-3 shadow-lg"
+          style={{ left: `calc(50% + ${sidebarCollapsed ? "35px" : "161px"})` }}
+        >
           <span className="text-sm font-medium text-[#030712]">
             {selectedIds.size} item{selectedIds.size > 1 ? "s" : ""} selected
           </span>
           <div className="h-4 w-px bg-[#e5e7eb]" />
           <button
             type="button"
-            className="inline-flex items-center gap-1.5 rounded-md bg-[#030712] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#1a1a2e] transition-colors"
+            onClick={handleVerifyNumbers}
+            disabled={verifying}
+            className="inline-flex items-center gap-1.5 rounded-md border border-[#e5e7eb] bg-white px-3 py-1.5 text-sm font-medium text-[#030712] hover:bg-[#f9fafb] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
           >
-            <CheckCircle className="size-4" />
-            Verify
+            {verifying ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <CheckCircle className="size-4" />
+            )}
+            {verifying ? "Verifying..." : "Verify"}
           </button>
           <button
             type="button"
@@ -364,5 +428,6 @@ export function PhoneNumberManagementTab() {
         </div>
       )}
     </div>
+    </>
   );
 }

@@ -263,7 +263,6 @@ export function ToolsPage() {
                     {item.category}
                   </span>
                 </div>
-                <span className="truncate text-[12px] text-[#6b7280] leading-tight">{item.description}</span>
                 <div className="flex items-center gap-1.5">
                   <span className={`inline-block size-1.5 rounded-full ${item.status === "Active" ? "bg-[#15803d]" : "bg-[#9ca3af]"}`} />
                   <span className={`text-[12px] leading-tight ${item.status === "Active" ? "text-[#15803d]" : "text-[#9ca3af]"}`}>
